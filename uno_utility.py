@@ -35,9 +35,9 @@ def validate_card(card, stack):
     stack = stack[-1].split('|')
     card_valid = card.split('|')#element 1 is card number/type and element 2 is color
     if(len(card_valid) > 1): #checking if the card is special or not
-        if(card_valid[0] == stack[0] or card_valid[1] == stack[1]):
+        if(card_valid[0] == stack[0] or card_valid[1] == stack[1]):#TODO : implement skip, draw_two and reverse
             return True
-    elif(len(card_valid) == 1):
+    elif(len(card_valid) == 1):#add functionality for special cards here
         return True
     else:
         return False

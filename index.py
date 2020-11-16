@@ -1,5 +1,7 @@
 from uno_utility import *
 
+#TODO : write a database for player using sqllite3
+
 deck = generate_deck()
 
 total_players = 0
@@ -18,13 +20,10 @@ def action_handler():
     #add logic for draw two, rev, skip here
     pass
 
-
 def special_handler():
     #add logic for wild and draw four here
     #hint : might be useful to have a buffer variable for the quoted value
     pass
-
-
 
 def check_end_condition():
     for x in range(total_players):

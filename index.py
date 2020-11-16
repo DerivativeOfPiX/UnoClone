@@ -14,7 +14,7 @@ def initialize_game():
             player_decks.append(deck[0:hand])
             del deck[0:hand]
     stack.append(deck[-1])
-    print("Current Stack :", stack[-1])
+    #print("Current Stack :", stack[-1])
  
 def action_handler():
     #add logic for draw two, rev, skip here

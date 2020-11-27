@@ -24,9 +24,9 @@ def generate_deck():
     #generating cards 1-9
     for i in range(4):
         deck.append('0' + delimit_char + deck_color[i])#0 card one of each
-        for j in range(2):#TODO: testing, should be 9!!
+        for j in range(9):#TODO: testing, should be 9!!
             for _ in range(2):#adding two number color cards 1-9
-                deck.append( str(j + 1) + delimit_char + deck_color[i])
+                deck.append(str(j + 1) + delimit_char + deck_color[i])
     for i in range(4):
         for j in range(3):#adding two pairs of action cards 
             for _ in range(2):
@@ -35,22 +35,25 @@ def generate_deck():
     for j in range(2):#special cards do not have colors !
         for _ in range(4): #fourth
             deck.append(deck_special[j] + delimit_char)
+    print(len(deck))
     random.shuffle(deck)
     return deck
 
 deck = generate_deck()
+
 def initialize_game():
     #add instruction string here.
+    stack_card = deck[-1]
     for _ in range(total_players + 1):# + 1 because we subtract 1 from the initial input, i guess i should move this to another variable huh
             player_hands.append(deck[0:hand])
             del deck[0:hand]
-    if(deck_action.count(deck[-1].split('|')[0]) > 0 or deck_special.count(deck[-1].split('|')[0]) > 0):
+    if(deck_action.count(stack_card.split('|')[0]) > 0 or deck_special.count(stack_card.split('|')[0]) > 0):
         #print("Special card on first stack., shuffling back into deck")
         random.shuffle(deck)
         initialize_game()
-        return
     else:
-        stack.append(deck[-1])#first card must be a normal card, so 
+        #first card must be a normal card, so 
+        stack.append(stack_card)
     
 def next_turn(curr_turn, t_plyrs):
     if(rev_flag == False):
@@ -70,12 +73,12 @@ def validate_card(card, stack, hand, player_turn):
     stack = stack[-1].split('|')
     card_valid = card.split('|')#element 1 is card number/type and element 2 is color
     #print(stack , " == ", card_valid, "?")
+    if(deck_special.count(card_valid[0]) > 0):
+            special_handler(card_valid[0])#add functionality for special cards here
+            return True
     if(card_valid[0] == stack[0] or card_valid[1] == stack[1]):#TODO : implement skip, draw_two and reverse
         if(deck_action.count(card_valid[0]) > 0):
             action_handler(card_valid[0], hand, player_turn)
-        return True
-    elif(deck_special.count(card_valid[0]) > 0):
-        special_handler(card_valid[0], hand, player_turn)#add functionality for special cards here
         return True
     else:
         return False
@@ -86,14 +89,14 @@ def action_handler(action, hand, player_turn):
         for _ in range(2):
             player_hands[next_turn(player_turn, total_players)].append(deck[-1])
     elif(action == "reverse"):
-        rev_flag = True
+        rev_flag = False if True else True 
     elif(action == "skip"):
         if(player_turn + 1 == total_players):
             player_turn = 0
         else:
             player_turn += 1
 
-def special_handler(action, hand, player_turn):
+def special_handler(action):
     #wild turn will require a prompt to be printed out in next players turn and should be checked for validity
     #add logic for wild and draw four here
     #hint : might be useful to have a buffer variable for the quoted value
@@ -103,13 +106,15 @@ def special_handler(action, hand, player_turn):
         stack.append(stack_card)
     else:
         print("Invalid Card Color, please enter from ", deck_color)
-        special_handler(action, hand, player_turn)
-        return
+        special_handler(action)
+    if(action == "draw_four"):
+        for _ in range(4):
+            player_hands[next_turn(player_turn, total_players)].append(deck[-1])
 
 def check_end_condition():
     for x in range(total_players):
         if(len(player_hands[x]) < 1):#check if any decks has cards less than 1
-            print('game has ended')
+            print('Game Ended !, Player {0} wins !'.format(x))
             return False
         else:
             return True
@@ -136,7 +141,7 @@ def turn_handler(current_turn):
     
     current_card_id = int(read_in) - 1
     print(current_hand[current_card_id])#making sure it's easier for accessiblity purposes
-    if(validate_card(current_hand[current_card_id], stack, current_hand ,current_turn)):#validating and calling special functions should ideally be two seperate processes
+    if(validate_card(current_hand[current_card_id], stack, current_hand, current_turn)):#validating and calling special functions should ideally be two seperate processes
         stack.append(current_hand[current_card_id])
         del current_hand[current_card_id]
         print('Current Stack :', stack[-1])
@@ -144,7 +149,7 @@ def turn_handler(current_turn):
         return
     else:
         print("Invalid Card, please try again !")
-        turn_handler(current_turn)#not sure if it is okay to call the function inside the function ?
+        turn_handler(current_turn)
     #lay it on stack
 
 
@@ -157,6 +162,20 @@ def game_loop():
         turn_handler(player_turn)
         player_turn = next_turn(player_turn, total_players)
 
-total_players = int(input("Enter Number of Players : ")) - 1 #easier to do index calculations this way
+print("Welcome to UNO !, This is a project made for the course Programming Fundamentals, Habib University.")
+print("Shuffle Cards from the Deck and try to match the one in the stack !")
+print("This game is best played on one computer, with players taking alternating turns entering input.")
+print("Group Members : Muhammad Hamza Asad, Dania Salman, Haniya Khan")
+print("The game ends when one player runs out of cards to play, note that the player has to physically shout 'UNO!' to declare it")
+
+def set_Players():
+    global total_players
+    total_players = int(input("Enter Number of Players : ")) - 1 #easier to do index calculations this way
+    if(total_players > 5 or total_players < 2):
+        print("Total Players cannot be less than 2 and more than 5 !")
+        print("Please Try Again.")
+        set_Players()
+
+set_Players()
 initialize_game()
 game_loop()

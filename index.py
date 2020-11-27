@@ -73,9 +73,6 @@ def validate_card(card, stack, hand, player_turn):
     stack = stack[-1].split('|')
     card_valid = card.split('|')#element 1 is card number/type and element 2 is color
     #print(stack , " == ", card_valid, "?")
-    if(deck_special.count(card_valid[0]) > 0):
-            special_handler(card_valid[0])#add functionality for special cards here
-            return True
     if(card_valid[0] == stack[0] or card_valid[1] == stack[1]):#TODO : implement skip, draw_two and reverse
         if(deck_action.count(card_valid[0]) > 0):
             action_handler(card_valid[0], hand, player_turn)
@@ -124,8 +121,12 @@ def turn_handler(current_turn):
     print("Current Stack :", stack[-1])
     current_hand = player_hands[current_turn] 
     print('Player {0}'.format(current_turn + 1))
-    print('Deck : {0}'.format(current_hand))
-    print("type d to (d)raw one card from deck.")
+    #prettify text
+    print("Your hand :-", end=" ")
+    for x in range(len(current_hand)):
+        print("(" + str(x + 1) , ":", current_hand[x] + ")", end=" /\ ")
+    
+    print("\ntype d to (d)raw one card from deck.")
     #get input
 
     #check if hand contains stack, if not, draw until desired card is taken OR
@@ -133,20 +134,33 @@ def turn_handler(current_turn):
 
     read_in = input("Select a Card to Play: ")
 
-    if(read_in == 'd'):
+    if(read_in == 'd'):#ADD A DRAW CHECK, PLAYER CAN ONLY DRAW ONCE, SKIP TURN AFTER ONE DRAW
         current_hand.append(deck[0])
         del deck[0]
-        turn_handler(current_turn)
-        return
-    
+        print("type s to (s)kip your turn")
+        print("type c to (c)ontinue")
+        prompt = input("(s)kip or (c)ontinue ?")
+        if(prompt == "c"):
+            turn_handler(current_turn)
+        else:
+            cls()
+            turn_handler(next_turn(player_turn, total_players))
+
+
     current_card_id = int(read_in) - 1
     print(current_hand[current_card_id])#making sure it's easier for accessiblity purposes
+
+    #preleminary check for a special card
+    if(deck_special.count(current_hand[current_card_id].split('|')[0]) > 0):
+        special_handler(current_hand[current_card_id].split('|')[0])#add functionality for special cards here
+        del current_hand[current_card_id]
+        return
+    
     if(validate_card(current_hand[current_card_id], stack, current_hand, current_turn)):#validating and calling special functions should ideally be two seperate processes
         stack.append(current_hand[current_card_id])
         del current_hand[current_card_id]
         print('Current Stack :', stack[-1])
         cls()
-        return
     else:
         print("Invalid Card, please try again !")
         turn_handler(current_turn)
@@ -171,7 +185,7 @@ print("The game ends when one player runs out of cards to play, note that the pl
 def set_Players():
     global total_players
     total_players = int(input("Enter Number of Players : ")) - 1 #easier to do index calculations this way
-    if(total_players > 5 or total_players < 2):
+    if(total_players > 4 or total_players < 1):
         print("Total Players cannot be less than 2 and more than 5 !")
         print("Please Try Again.")
         set_Players()

@@ -4,7 +4,7 @@
 import os
 import random
 
-deck_color = ["red", "green", "blue", "yellow"]
+deck_color = ["red", "blue", "green", "yellow"]
 deck_action = ["draw_two", "skip", "reverse"]
 deck_special = ["draw_four", "wild"]
 #should add a demiliting string in b/w to seperate out the card name
@@ -13,13 +13,14 @@ deck = []
 #need a helper function that resets turn counter
 
 total_players = 0
-player_hands = [] #multidimensional array.
-hand = 8#how many cards each player gets
-stack = [] #this variable stores each card played
+player_hands = [] #multidimensional array that stores each players hands.
+hand = 7#how many cards each player gets
+stack = [] #this list stores each card played
 
 def cls():#a util function that allows us to clear the screen on both windows and linux
     os.system('cls' if os.name=='nt' else 'clear')
 
+#generates a list of 108 cards, includes all cards present in an UNO decks, then shuffles
 def generate_deck():
     #generating cards 1-9
     for i in range(4):
@@ -35,12 +36,11 @@ def generate_deck():
     for j in range(2):#special cards do not have colors !
         for _ in range(4): #fourth
             deck.append(deck_special[j] + delimit_char)
-    print(len(deck))
     random.shuffle(deck)
     return deck
 
-deck = generate_deck()
-
+#initializing the stack list and shuffling decks, validation check for any special or action cards on stack
+#from the mulligan
 def initialize_game():
     #add instruction string here.
     stack_card = deck[-1]
@@ -54,7 +54,8 @@ def initialize_game():
     else:
         #first card must be a normal card, so 
         stack.append(stack_card)
-    
+
+#handy functions that returns an INT which denotes the next player.
 def next_turn(curr_turn, t_plyrs):
     if(rev_flag == False):
         if(curr_turn == t_plyrs):
@@ -68,7 +69,8 @@ def next_turn(curr_turn, t_plyrs):
             return curr_turn - 1
 
 #check if the card matches the color or number of last card played
-#can't use object so have to make do with strings :/
+#action handler is also called from here
+#can't use a "card" object so have to make do with strings :/
 def validate_card(card, stack, hand, player_turn):
     stack = stack[-1].split('|')
     card_valid = card.split('|')#element 1 is card number/type and element 2 is color
@@ -79,20 +81,25 @@ def validate_card(card, stack, hand, player_turn):
         return True
     else:
         return False
-    
+
+#handles functionality for draw two, skip and reverse
 def action_handler(action, hand, player_turn):
     #add logic for draw two, rev, skip here
     if(action == "draw_two"):
+        #add two cards from deck to next player's hand
         for _ in range(2):
             player_hands[next_turn(player_turn, total_players)].append(deck[-1])
+    #activate the rev flag, we utilize a small handy close here.
     elif(action == "reverse"):
-        rev_flag = False if True else True 
+        rev_flag = False if True else True
+    #just add 1 to the current player turn, note to update to work with the reverse flag 
     elif(action == "skip"):
-        if(player_turn + 1 == total_players):
+        if(player_turn == total_players):
             player_turn = 0
         else:
             player_turn += 1
 
+#this functions handles the wild and draw four cards, asking and validating prompts
 def special_handler(action):
     #wild turn will require a prompt to be printed out in next players turn and should be checked for validity
     #add logic for wild and draw four here
@@ -108,14 +115,18 @@ def special_handler(action):
         for _ in range(4):
             player_hands[next_turn(player_turn, total_players)].append(deck[-1])
 
+#each while loop frame, python checks this condition. 
 def check_end_condition():
     for x in range(total_players):
         if(len(player_hands[x]) < 1):#check if any decks has cards less than 1
-            print('Game Ended !, Player {0} wins !'.format(x))
+            print('Game Ended !, Player {0} wins !'.format(x + 1))
             return False
         else:
             return True
 
+#the main part, while the end condition is false, this module is called,
+#recurs by utilizing the global variable, player_turn, calls the next_turn
+#to iterate over each turn.
 def turn_handler(current_turn):
     #display card
     print("Current Stack :", stack[-1])
@@ -134,10 +145,14 @@ def turn_handler(current_turn):
 
     read_in = input("Select a Card to Play: ")
 
-    if(read_in == 'd'):#ADD A DRAW CHECK, PLAYER CAN ONLY DRAW ONCE, SKIP TURN AFTER ONE DRAW
+    #ADD A DRAW CHECK, PLAYER CAN ONLY DRAW ONCE, SKIP TURN AFTER ONE DRAW
+    if(read_in == 'd'):
         current_hand.append(deck[0])
         del deck[0]
-        print("type s to (s)kip your turn")
+        print("Your hand :-", end=" ")
+        for x in range(len(current_hand)):
+            print("(" + str(x + 1) , ":", current_hand[x] + ")", end=" /\ ")
+        print("\ntype s to (s)kip your turn")
         print("type c to (c)ontinue")
         prompt = input("(s)kip or (c)ontinue ?")
         if(prompt == "c"):
@@ -166,7 +181,8 @@ def turn_handler(current_turn):
         turn_handler(current_turn)
     #lay it on stack
 
-
+#after the game is initialized, control is passed here, this function calls for
+#the turns and checks if game has ended or not.
 def game_loop():
     global rev_flag 
     rev_flag = False
@@ -179,17 +195,22 @@ def game_loop():
 print("Welcome to UNO !, This is a project made for the course Programming Fundamentals, Habib University.")
 print("Shuffle Cards from the Deck and try to match the one in the stack !")
 print("This game is best played on one computer, with players taking alternating turns entering input.")
-print("Group Members : Muhammad Hamza Asad, Dania Salman, Haniya Khan")
-print("The game ends when one player runs out of cards to play, note that the player has to physically shout 'UNO!' to declare it")
+print("\nPass the device around and have fun !\n")
+print("Group Members : \nMuhammad Hamza Asad\nDania Salman\nHaniya Khan\n")
+print('''The game ends when one player runs out of cards to play, 
+note that the player has to physically shout 'UNO!' to 
+declare that they have one card left\n\n''')
 
-def set_Players():
+#validation check for player count
+def set_players():
     global total_players
     total_players = int(input("Enter Number of Players : ")) - 1 #easier to do index calculations this way
     if(total_players > 4 or total_players < 1):
         print("Total Players cannot be less than 2 and more than 5 !")
         print("Please Try Again.")
-        set_Players()
+        set_players()
 
-set_Players()
+deck = generate_deck() #generating the deck before doing anything
+set_players()
 initialize_game()
 game_loop()
